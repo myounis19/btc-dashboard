@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC Edge</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #06080b;
+  --sur:      #0c1018;
+  --sur2:     #101620;
+  --bdr:      #18222e;
+  --bdr2:     #1e2d3d;
+  --acc:      #00d4ff;
+  --grn:      #00e87a;
+  --red:      #ff3355;
+  --gld:      #f5c842;
+  --txt:      #b8ccd8;
+  --dim:      #4a6070;
+  --dim2:     #2a3d4d;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: 'Inter', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+.hdr {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 24px;
+  padding: 0 24px;
+  height: 52px;
+  border-bottom: 1px solid var(--bdr);
+  background: var(--sur);
+  flex-shrink: 0;
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 3px;
+  color: var(--acc);
+  display: flex; align-items: center; gap: 10px;
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--grn);
+  box-shadow: 0 0 8px var(--grn);
+  animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* ticker tape strip */
+.ticker-strip {
+  overflow: hidden;
+  height: 100%;
+  display: flex; align-items: center;
+}
+
+.signal-pill {
+  font-family: 'Space Mono', monospace;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 6px 16px;
+  border-radius: 3px;
+  border: 1px solid;
+  white-space: nowrap;
+  transition: all .4s;
+}
+.signal-pill.long  { color: var(--grn); border-color: var(--grn); background: rgba(0,232,122,.07); box-shadow: 0 0 16px rgba(0,232,122,.12); }
+.signal-pill.short { color: var(--red); border-color: var(--red); background: rgba(255,51,85,.07); }
+.signal-pill.aside { color: var(--gld); border-color: var(--gld); background: rgba(245,200,66,.07); }
+
+.hdr-time {
+  font-family: 'Space Mono', monospace;
+  font-size: .62rem;
+  color: var(--dim);
+  text-align: right;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+.hdr-time b { color: var(--acc); }
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 24px 0;
+  border-bottom: 1px solid var(--bdr);
+  background: var(--sur);
+  flex-shrink: 0;
+}
+.tab {
+  font-family: 'Space Mono', monospace;
+  font-size: .65rem;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+  padding: 7px 18px;
+  border-radius: 3px 3px 0 0;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-bottom: none;
+  transition: all .2s;
+  position: relative;
+  bottom: -1px;
+}
+.tab:hover { color: var(--txt); }
+.tab.active {
+  color: var(--acc);
+  background: var(--bg);
+  border-color: var(--bdr);
+  border-bottom-color: var(--bg);
+}
+
+/* ── PAGES ── */
+.page { display: none; flex: 1; overflow: hidden; }
+.page.active { display: flex; flex-direction: column; }
+
+/* ════════════════════════════════
+   PAGE 1 — MARKET VIEW
+════════════════════════════════ */
+.market-view {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  grid-template-rows: 1fr 160px;
+  gap: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* BTC chart — full left column */
+.btc-pane {
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--bdr);
+  overflow: hidden;
+}
+
+.pane-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--bdr);
+  background: var(--sur);
+  flex-shrink: 0;
+}
+.pane-title {
+  font-family: 'Space Mono', monospace;
+  font-size: .62rem;
+  letter-spacing: 2px;
+  color: var(--acc);
+}
+.pane-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: .55rem;
+  color: var(--dim);
+}
+
+.btc-chart-wrap { flex: 1; overflow: hidden; }
+
+/* Right column — stacked panels */
+.right-col {
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Key markets — 4 instruments */
+.mkt-list { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+.mkt-item {
+  flex: 1;
+  border-bottom: 1px solid var(--bdr);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+.mkt-item:last-child { border-bottom: none; }
+
+.mkt-label {
+  padding: 5px 12px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--bdr);
+  background: var(--sur);
+  flex-shrink: 0;
+}
+.mkt-name { font-family: 'Space Mono', monospace; font-size: .58rem; letter-spacing: 1px; color: var(--dim); }
+.mkt-badge { font-family: 'Space Mono', monospace; font-size: .5rem; color: var(--dim2); }
+
+/* Bottom strip — FG + sessions */
+.bottom-strip {
+  grid-column: 2;
+  border-top: 1px solid var(--bdr);
+  background: var(--sur);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 20px;
+  overflow: hidden;
+}
+
+.fg-compact {
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.fg-arc-mini { width: 48px; height: 28px; }
+.fg-text { line-height: 1.4; }
+.fg-num { font-family: 'Space Mono', monospace; font-size: .9rem; font-weight: 700; }
+.fg-lbl { font-family: 'Space Mono', monospace; font-size: .5rem; letter-spacing: 1px; }
+
+.divider { width: 1px; height: 36px; background: var(--bdr); flex-shrink: 0; }
+
+.sessions-compact { display: flex; flex-direction: column; gap: 4px; }
+.sess-row { display: flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; font-size: .55rem; }
+.sess-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.sess-dot.open { background: var(--grn); box-shadow: 0 0 5px var(--grn); }
+.sess-dot.closed { background: var(--dim2); }
+
+.fg-bar-wrap { flex: 1; }
+.fg-bar-track { height: 4px; background: var(--bdr); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+.fg-bar-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+.fg-bar-labels { display: flex; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: .48rem; color: var(--dim); }
+
+/* ════════════════════════════════
+   PAGE 2 — DECISION VIEW
+════════════════════════════════ */
+.decision-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dec-left {
+  border-right: 1px solid var(--bdr);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dec-right {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dec-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bdr) transparent;
+}
+
+/* Factor rows */
+.factor-group { margin-bottom: 20px; }
+.factor-group-title {
+  font-family: 'Space Mono', monospace;
+  font-size: .55rem;
+  letter-spacing: 2px;
+  color: var(--dim);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--bdr);
+}
+.factor-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+}
+.factor-name { font-size: .72rem; color: var(--txt); font-weight: 400; }
+.factor-hint { font-size: .58rem; color: var(--dim); margin-top: 1px; }
+.fbtn-group { display: flex; gap: 3px; }
+.fbtn {
+  font-family: 'Space Mono', monospace;
+  font-size: .55rem;
+  padding: 4px 8px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all .15s;
+  opacity: .28;
+  background: transparent;
+}
+.fbtn:hover { opacity: .7; }
+.fbtn.active { opacity: 1; }
+.fbtn.bull { color: var(--grn); border-color: var(--grn); }
+.fbtn.bull.active { background: rgba(0,232,122,.1); }
+.fbtn.neut { color: var(--gld); border-color: var(--gld); }
+.fbtn.neut.active { background: rgba(245,200,66,.08); }
+.fbtn.bear { color: var(--red); border-color: var(--red); }
+.fbtn.bear.active { background: rgba(255,51,85,.1); }
+
+/* Score panel */
+.score-panel {
+  padding: 20px 24px;
+  border-top: 1px solid var(--bdr);
+  background: var(--sur);
+  flex-shrink: 0;
+}
+.score-hero {
+  display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px;
+}
+.score-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.5rem;
+  line-height: 1;
+  transition: color .4s;
+}
+.score-denom {
+  font-family: 'Space Mono', monospace;
+  font-size: .7rem;
+  color: var(--dim);
+}
+.score-track { height: 6px; background: var(--bdr); border-radius: 3px; overflow: hidden; margin: 10px 0 6px; }
+.score-fill { height: 100%; border-radius: 3px; transition: all .5s cubic-bezier(.4,0,.2,1); }
+.score-axis { display: flex; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: .5rem; color: var(--dim); }
+
+/* Journal + checklist */
+.journal-pane {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bdr) transparent;
+}
+
+.jlabel {
+  font-family: 'Space Mono', monospace;
+  font-size: .58rem;
+  letter-spacing: 2px;
+  color: var(--dim);
+  margin-bottom: 8px;
+}
+
+.jtext {
+  width: 100%;
+  height: 110px;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 3px;
+  color: var(--txt);
+  font-family: 'Space Mono', monospace;
+  font-size: .65rem;
+  padding: 10px 12px;
+  resize: none;
+  outline: none;
+  line-height: 1.7;
+}
+.jtext:focus { border-color: var(--acc); }
+.jtext::placeholder { color: var(--dim2); }
+
+.checklist { display: flex; flex-direction: column; gap: 5px; }
+.chk {
+  display: flex; align-items: center; gap: 9px;
+  cursor: pointer;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+}
+.chk-box {
+  width: 13px; height: 13px;
+  border: 1px solid var(--bdr2);
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all .2s;
+  font-size: .6rem;
+}
+.chk.done .chk-box { border-color: var(--grn); background: rgba(0,232,122,.12); color: var(--grn); }
+.chk-txt { font-size: .65rem; color: var(--dim); font-family: 'Space Mono', monospace; }
+.chk.done .chk-txt { color: var(--txt); }
+
+/* Conviction override */
+.conviction-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 4px;
+}
+.conv-label { font-family: 'Space Mono', monospace; font-size: .58rem; color: var(--dim); white-space: nowrap; }
+.conv-btn {
+  font-family: 'Space Mono', monospace; font-size: .58rem;
+  padding: 4px 10px; border-radius: 2px; border: 1px solid var(--bdr2);
+  background: transparent; color: var(--dim); cursor: pointer;
+  transition: all .2s;
+}
+.conv-btn:hover, .conv-btn.active { border-color: var(--acc); color: var(--acc); background: rgba(0,212,255,.07); }
+
+/* ════════════════════════════════
+   PAGE 2 — ELDER TRIPLE SCREEN
+════════════════════════════════ */
+
+/* Master layout: 3 chart columns + 1 signal column */
+.elder-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 280px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Each screen column */
+.elder-screen {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--bdr);
+  overflow: hidden;
+  min-height: 0;
+}
+.elder-screen:last-of-type { border-right: none; }
+
+/* Screen header */
+.elder-hdr {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--bdr);
+  background: var(--sur);
+}
+
+.elder-hdr-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 14px 5px;
+  gap: 8px;
+}
+
+.elder-screen-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.elder-screen-num.tide  { color: var(--acc); }
+.elder-screen-num.wave  { color: var(--gld); }
+.elder-screen-num.ripple { color: var(--grn); }
+
+.elder-screen-name {
+  font-family: 'Space Mono', monospace;
+  font-size: .58rem;
+  letter-spacing: 2px;
+  flex: 1;
+}
+.elder-screen-name.tide  { color: var(--acc); }
+.elder-screen-name.wave  { color: var(--gld); }
+.elder-screen-name.ripple { color: var(--grn); }
+
+.elder-tf {
+  font-family: 'Space Mono', monospace;
+  font-size: .5rem;
+  color: var(--dim);
+  padding: 2px 7px;
+  border: 1px solid var(--bdr2);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* Rule strip under header */
+.elder-rule {
+  padding: 4px 14px 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: .5rem;
+  color: var(--dim);
+  line-height: 1.5;
+  border-top: 1px solid var(--bdr);
+}
+.elder-rule b { color: var(--txt); }
+
+/* Chart area */
+.elder-chart { flex: 1; overflow: hidden; min-height: 0; }
+
+/* Assessment bar below each chart */
+.elder-assess {
+  flex-shrink: 0;
+  border-top: 1px solid var(--bdr);
+  background: var(--sur);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.elder-assess-label {
+  font-family: 'Space Mono', monospace;
+  font-size: .55rem;
+  color: var(--dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.elder-btns { display: flex; gap: 4px; flex: 1; }
+
+.ebtn {
+  flex: 1;
+  font-family: 'Space Mono', monospace;
+  font-size: .58rem;
+  padding: 5px 4px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: transparent;
+  opacity: .28;
+  transition: all .15s;
+  text-align: center;
+}
+.ebtn:hover { opacity: .65; }
+.ebtn.active { opacity: 1; }
+.ebtn.bull { color: var(--grn); border-color: var(--grn); }
+.ebtn.bull.active { background: rgba(0,232,122,.1); }
+.ebtn.neut { color: var(--gld); border-color: var(--gld); }
+.ebtn.neut.active { background: rgba(245,200,66,.08); }
+.ebtn.bear { color: var(--red); border-color: var(--red); }
+.ebtn.bear.active { background: rgba(255,51,85,.1); }
+
+/* Status dot on each screen */
+.screen-status {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: var(--bdr2);
+  transition: all .3s;
+}
+.screen-status.bull { background: var(--grn); box-shadow: 0 0 6px var(--grn); }
+.screen-status.bear { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.screen-status.neut { background: var(--gld); }
+
+/* ── SIGNAL COLUMN ── */
+.elder-signal-col {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--sur);
+  border-left: 1px solid var(--bdr);
+}
+
+.signal-col-hdr {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--bdr);
+  font-family: 'Space Mono', monospace;
+  font-size: .6rem;
+  letter-spacing: 2px;
+  color: var(--acc);
+  flex-shrink: 0;
+}
+
+.signal-col-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bdr) transparent;
+}
+
+/* Screen summary cards in signal col */
+.screen-card {
+  border: 1px solid var(--bdr);
+  border-radius: 3px;
+  padding: 12px 14px;
+  background: var(--sur2);
+  transition: border-color .3s;
+}
+.screen-card.bull { border-color: rgba(0,232,122,.3); }
+.screen-card.bear { border-color: rgba(255,51,85,.3); }
+.screen-card.neut { border-color: rgba(245,200,66,.2); }
+
+.sc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.sc-name { font-family: 'Space Mono', monospace; font-size: .58rem; letter-spacing: 1px; }
+.sc-state {
+  font-family: 'Space Mono', monospace; font-size: .58rem;
+  padding: 2px 8px; border-radius: 2px;
+}
+.sc-state.bull { color: var(--grn); background: rgba(0,232,122,.1); }
+.sc-state.bear { color: var(--red); background: rgba(255,51,85,.1); }
+.sc-state.neut { color: var(--gld); background: rgba(245,200,66,.08); }
+
+.sc-rule { font-size: .6rem; color: var(--dim); line-height: 1.5; }
+
+/* Elder rule: tide must confirm */
+.tide-gate {
+  padding: 10px 12px;
+  background: rgba(0,0,0,.3);
+  border: 1px solid var(--bdr);
+  border-radius: 3px;
+  font-family: 'Space Mono', monospace;
+  font-size: .58rem;
+  color: var(--dim);
+  line-height: 1.6;
+}
+.tide-gate b { color: var(--txt); }
+.tide-gate.pass { border-color: rgba(0,232,122,.25); color: var(--txt); }
+.tide-gate.fail { border-color: rgba(255,51,85,.25); }
+
+/* Big TA signal output */
+.ta-signal-output {
+  padding: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--bdr);
+  text-align: center;
+  transition: all .4s;
+}
+.ta-signal-output .sig-word {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  letter-spacing: 3px;
+  line-height: 1;
+  display: block;
+}
+.ta-signal-output .sig-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: .52rem;
+  letter-spacing: 1px;
+  color: var(--dim);
+  margin-top: 4px;
+  display: block;
+}
+.ta-signal-output.long  { border-color: rgba(0,232,122,.4); background: rgba(0,232,122,.05); }
+.ta-signal-output.short { border-color: rgba(255,51,85,.4); background: rgba(255,51,85,.05); }
+.ta-signal-output.aside { border-color: rgba(245,200,66,.3); background: rgba(245,200,66,.04); }
+.ta-signal-output.long  .sig-word { color: var(--grn); }
+.ta-signal-output.short .sig-word { color: var(--red); }
+.ta-signal-output.aside .sig-word { color: var(--gld); }
+
+/* Entry condition text */
+.entry-condition {
+  font-family: 'Space Mono', monospace;
+  font-size: .58rem;
+  color: var(--dim);
+  line-height: 1.6;
+  padding: 10px 12px;
+  background: rgba(0,0,0,.2);
+  border-radius: 3px;
+  border: 1px solid var(--bdr);
+}
+.entry-condition b { color: var(--acc); }
+
+/* ── TRADE MANAGEMENT PANEL ── */
+.trade-panel {
+  border: 1px solid var(--bdr);
+  border-radius: 3px;
+  background: var(--sur2);
+  overflow: hidden;
+}
+
+.trade-panel-title {
+  font-family: 'Space Mono', monospace;
+  font-size: .58rem;
+  letter-spacing: 2px;
+  color: var(--dim);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--bdr);
+  background: rgba(0,0,0,.2);
+}
+
+.trade-inputs {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trade-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.trade-lbl {
+  font-family: 'Space Mono', monospace;
+  font-size: .58rem;
+  color: var(--dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: 90px;
+}
+
+.trade-input {
+  flex: 1;
+  background: rgba(0,0,0,.3);
+  border: 1px solid var(--bdr2);
+  border-radius: 2px;
+  color: var(--txt);
+  font-family: 'Space Mono', monospace;
+  font-size: .65rem;
+  padding: 5px 8px;
+  outline: none;
+  width: 100%;
+  transition: border-color .15s;
+}
+.trade-input:focus { border-color: var(--acc); }
+.trade-input::placeholder { color: var(--dim2); }
+
+.trade-unit {
+  font-family: 'Space Mono', monospace;
+  font-size: .55rem;
+  color: var(--dim);
+  flex-shrink: 0;
+  width: 30px;
+  text-align: right;
+}
+
+.calc-btn {
+  width: 100%;
+  font-family: 'Space Mono', monospace;
+  font-size: .6rem;
+  letter-spacing: 1px;
+  padding: 7px;
+  border-radius: 2px;
+  border: 1px solid var(--acc);
+  background: rgba(0,212,255,.06);
+  color: var(--acc);
+  cursor: pointer;
+  transition: all .2s;
+  margin-top: 2px;
+}
+.calc-btn:hover { background: rgba(0,212,255,.14); }
+
+.trade-results {
+  padding: 10px 12px;
+  border-top: 1px solid var(--bdr);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.result-lbl {
+  font-family: 'Space Mono', monospace;
+  font-size: .55rem;
+  color: var(--dim);
+}
+
+.result-val {
+  font-family: 'Space Mono', monospace;
+  font-size: .68rem;
+  font-weight: 700;
+  transition: color .3s;
+}
+
+.result-val.long  { color: var(--grn); }
+.result-val.short { color: var(--red); }
+.result-val.neutral { color: var(--txt); }
+
+.result-divider {
+  height: 1px;
+  background: var(--bdr);
+  margin: 2px 0;
+}
+
+.rr-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 2px;
+  border: 1px solid var(--bdr);
+  background: rgba(0,0,0,.2);
+  margin-top: 2px;
+}
+.rr-lbl { font-family: 'Space Mono', monospace; font-size: .55rem; color: var(--dim); }
+.rr-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 1px; }
+.rr-val.good { color: var(--grn); }
+.rr-val.ok   { color: var(--gld); }
+.rr-val.bad  { color: var(--red); }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bdr2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo"><div class="live-dot"></div>BTC EDGE</div>
+
+  <!-- Live ticker tape -->
+  <div class="ticker-strip">
+    <div class="tradingview-widget-container" style="width:100%;height:40px;">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+      {"symbols":[
+        {"proName":"BITSTAMP:BTCUSD","title":"BTC"},
+        {"proName":"FOREXCOM:SPXUSD","title":"SPX"},
+        {"proName":"FOREXCOM:NSXUSD","title":"NQ"},
+        {"proName":"TVC:VIX","title":"VIX"},
+        {"proName":"TVC:GOLD","title":"Gold"},
+        {"proName":"TVC:DXY","title":"DXY"},
+        {"proName":"TVC:USOIL","title":"Oil"}
+      ],"showSymbolLogo":false,"isTransparent":true,"displayMode":"compact","colorTheme":"dark","locale":"en"}
+      </script>
+    </div>
+  </div>
+
+  <div id="main-signal" class="signal-pill aside">◆ STAND ASIDE</div>
+
+  <div class="hdr-time">
+    <div><b id="hdr-date">—</b></div>
+    <div>UTC <b id="hdr-time">—</b></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('markets')">① MARKET VIEW</div>
+  <div class="tab" onclick="switchTab('technicals')">② TECHNICALS</div>
+  <div class="tab" onclick="switchTab('decision')">③ DECISION ENGINE</div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE 1 — MARKET VIEW
+══════════════════════════════════ -->
+<div class="page active" id="page-markets">
+  <div class="market-view">
+
+    <!-- BTC HERO CHART -->
+    <div class="btc-pane">
+      <div class="pane-header">
+        <div class="pane-title">₿  BITCOIN / USD</div>
+        <div class="pane-sub">BITSTAMP · DAILY · MACD · RSI · BOLLINGER BANDS</div>
+      </div>
+      <div class="btc-chart-wrap">
+        <div class="tradingview-widget-container" style="height:100%;width:100%;">
+          <div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+          {"autosize":true,"symbol":"BITSTAMP:BTCUSD","interval":"D","timezone":"Etc/UTC","theme":"dark","style":"1",
+          "locale":"en","backgroundColor":"rgba(6,8,11,1)","gridColor":"rgba(24,34,46,0.8)",
+          "hide_top_toolbar":false,"save_image":false,
+          "studies":["STD;MACD","STD;RSI","STD;BB"],
+          "support_host":"https://www.tradingview.com"}
+          </script>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: 4 KEY MARKETS -->
+    <div class="right-col">
+      <div class="pane-header">
+        <div class="pane-title">KEY CORRELATES</div>
+        <div class="pane-sub">30D CHART · REAL-TIME</div>
+      </div>
+      <div class="mkt-list">
+
+        <!-- SP500 -->
+        <div class="mkt-item">
+          <div class="mkt-label">
+            <span class="mkt-name">S&amp;P 500</span>
+            <span class="mkt-badge">RISK-ON/OFF</span>
+          </div>
+          <div style="flex:1;min-height:0;">
+            <div class="tradingview-widget-container" style="height:100%;">
+              <div class="tradingview-widget-container__widget" style="height:100%;"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+              {"symbol":"FOREXCOM:SPXUSD","width":"100%","height":"100%","locale":"en","dateRange":"1M","colorTheme":"dark","isTransparent":true,"autosize":true}
+              </script>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIX -->
+        <div class="mkt-item">
+          <div class="mkt-label">
+            <span class="mkt-name">VIX</span>
+            <span class="mkt-badge">FEAR GAUGE</span>
+          </div>
+          <div style="flex:1;min-height:0;">
+            <div class="tradingview-widget-container" style="height:100%;">
+              <div class="tradingview-widget-container__widget" style="height:100%;"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+              {"symbol":"TVC:VIX","width":"100%","height":"100%","locale":"en","dateRange":"1M","colorTheme":"dark","isTransparent":true,"autosize":true}
+              </script>
+            </div>
+          </div>
+        </div>
+
+        <!-- GOLD -->
+        <div class="mkt-item">
+          <div class="mkt-label">
+            <span class="mkt-name">GOLD</span>
+            <span class="mkt-badge">MACRO HEDGE</span>
+          </div>
+          <div style="flex:1;min-height:0;">
+            <div class="tradingview-widget-container" style="height:100%;">
+              <div class="tradingview-widget-container__widget" style="height:100%;"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+              {"symbol":"TVC:GOLD","width":"100%","height":"100%","locale":"en","dateRange":"1M","colorTheme":"dark","isTransparent":true,"autosize":true}
+              </script>
+            </div>
+          </div>
+        </div>
+
+        <!-- DXY -->
+        <div class="mkt-item">
+          <div class="mkt-label">
+            <span class="mkt-name">DXY — US DOLLAR</span>
+            <span class="mkt-badge">↑ BEARISH BTC</span>
+          </div>
+          <div style="flex:1;min-height:0;">
+            <div class="tradingview-widget-container" style="height:100%;">
+              <div class="tradingview-widget-container__widget" style="height:100%;"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+              {"symbol":"TVC:DXY","width":"100%","height":"100%","locale":"en","dateRange":"1M","colorTheme":"dark","isTransparent":true,"autosize":true}
+              </script>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BOTTOM STRIP: Fear & Greed + Sessions + Oil -->
+    <div class="bottom-strip">
+
+      <div class="fg-compact">
+        <svg class="fg-arc-mini" viewBox="0 0 100 55">
+          <defs>
+            <linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ff3355"/>
+              <stop offset="50%" stop-color="#f5c842"/>
+              <stop offset="100%" stop-color="#00e87a"/>
+            </linearGradient>
+          </defs>
+          <path d="M10 50 A40 40 0 0 1 90 50" fill="none" stroke="#18222e" stroke-width="7" stroke-linecap="round"/>
+          <path d="M10 50 A40 40 0 0 1 90 50" fill="none" stroke="url(#ag)" stroke-width="7" stroke-linecap="round" opacity=".4"/>
+          <line id="fn-mini" x1="50" y1="50" x2="50" y2="16" stroke="white" stroke-width="2" stroke-linecap="round"
+            transform="rotate(0,50,50)" style="transition:transform .8s ease"/>
+          <circle cx="50" cy="50" r="3" fill="white"/>
+        </svg>
+        <div class="fg-text">
+          <div class="fg-num" id="fg-num">—</div>
+          <div class="fg-lbl" id="fg-lbl" style="color:var(--dim)">LOADING</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="fg-bar-wrap">
+        <div class="fg-bar-track">
+          <div class="fg-bar-fill" id="fg-bar" style="width:50%;background:var(--gld);"></div>
+        </div>
+        <div class="fg-bar-labels"><span style="color:var(--red)">FEAR</span><span>NEUTRAL</span><span style="color:var(--grn)">GREED</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Oil mini -->
+      <div style="width:140px;height:44px;flex-shrink:0;">
+        <div style="font-family:'Space Mono',monospace;font-size:.5rem;color:var(--dim);letter-spacing:1px;margin-bottom:2px;">WTI OIL · RISK</div>
+        <div class="tradingview-widget-container" style="height:36px;">
+          <div class="tradingview-widget-container__widget" style="height:36px;"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+          {"symbol":"TVC:USOIL","width":"100%","height":"100%","locale":"en","dateRange":"5D","colorTheme":"dark","isTransparent":true,"autosize":true}
+          </script>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="sessions-compact" id="sessions"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE 2 — TECHNICALS
+══════════════════════════════════ -->
+<!-- ══════════════════════════════════
+     PAGE 2 — ELDER TRIPLE SCREEN
+══════════════════════════════════ -->
+<div class="page" id="page-technicals">
+  <div class="elder-view">
+
+    <!-- ═══════════════════════════
+         SCREEN 1 — TIDE (DAILY)
+    ═══════════════════════════ -->
+    <div class="elder-screen">
+      <div class="elder-hdr">
+        <div class="elder-hdr-top">
+          <div class="elder-screen-num tide">SCREEN 1</div>
+          <div class="elder-screen-name tide">TIDE — MARKET DIRECTION</div>
+          <div class="elder-tf">DAILY · BINANCE PERP</div>
+        </div>
+        <div class="elder-rule">
+          <b>Elder's rule:</b> Only trade in the direction of the tide. If MACD-H weekly slope is rising → only look for longs. Falling → only look for shorts. Flat → stand aside.
+        </div>
+      </div>
+      <div class="elder-chart">
+        <div class="tradingview-widget-container" style="height:100%;width:100%;">
+          <div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+          {
+            "autosize": true,
+            "symbol": "BINANCE:BTCUSDT.P",
+            "interval": "D",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "backgroundColor": "rgba(6,8,11,1)",
+            "gridColor": "rgba(24,34,46,0.7)",
+            "hide_top_toolbar": false,
+            "save_image": false,
+            "studies": [
+              {"id":"MAExp@tv-basicstudies","inputs":{"length":13}},
+              {"id":"MAExp@tv-basicstudies","inputs":{"length":26}},
+              {"id":"MAExp@tv-basicstudies","inputs":{"length":200}},
+              "STD;MACD",
+              {"id":"Force_Index@tv-basicstudies"},
+              "STD;Volume"
+            ],
+            "support_host": "https://www.tradingview.com"
+          }
+          </script>
+        </div>
+      </div>
+      <div class="elder-assess">
+        <div class="screen-status" id="tide-dot"></div>
+        <div class="elder-assess-label">TIDE:</div>
+        <div class="elder-btns">
+          <button class="ebtn bull" onclick="setScreen('tide',1)">▲ RISING</button>
+          <button class="ebtn neut active" onclick="setScreen('tide',0)">● FLAT</button>
+          <button class="ebtn bear" onclick="setScreen('tide',-1)">▼ FALLING</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════
+         SCREEN 2 — WAVE (4H)
+    ═══════════════════════════ -->
+    <div class="elder-screen">
+      <div class="elder-hdr">
+        <div class="elder-hdr-top">
+          <div class="elder-screen-num wave">SCREEN 2</div>
+          <div class="elder-screen-name wave">WAVE — COUNTER-TREND OSC.</div>
+          <div class="elder-tf">4H · BINANCE PERP</div>
+        </div>
+        <div class="elder-rule">
+          <b>Elder's rule:</b> In an uptrend, wait for oscillator to pull back to oversold → buy the dip. In a downtrend, wait for oversold bounce → sell the rally. Force Index spike = institutional activity.
+        </div>
+      </div>
+      <div class="elder-chart">
+        <div class="tradingview-widget-container" style="height:100%;width:100%;">
+          <div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+          {
+            "autosize": true,
+            "symbol": "BINANCE:BTCUSDT.P",
+            "interval": "240",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "backgroundColor": "rgba(6,8,11,1)",
+            "gridColor": "rgba(24,34,46,0.7)",
+            "hide_top_toolbar": false,
+            "save_image": false,
+            "studies": [
+              {"id":"MAExp@tv-basicstudies","inputs":{"length":13}},
+              {"id":"MAExp@tv-basicstudies","inputs":{"length":26}},
+              "STD;MACD",
+              {"id":"Force_Index@tv-basicstudies"},
+              "STD;Volume"
+            ],
+            "support_host": "https://www.tradingview.com"
+          }
+          </script>
+        </div>
+      </div>
+      <div class="elder-assess">
+        <div class="screen-status" id="wave-dot"></div>
+        <div class="elder-assess-label">WAVE:</div>
+        <div class="elder-btns">
+          <button class="ebtn bull" onclick="setScreen('wave',1)">▲ OVERSOLD</button>
+          <button class="ebtn neut active" onclick="setScreen('wave',0)">● MID-RANGE</button>
+          <button class="ebtn bear" onclick="setScreen('wave',-1)">▼ OVERBOUGHT</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════
+         SCREEN 3 — RIPPLE (1H)
+    ═══════════════════════════ -->
+    <div class="elder-screen">
+      <div class="elder-hdr">
+        <div class="elder-hdr-top">
+          <div class="elder-screen-num ripple">SCREEN 3</div>
+          <div class="elder-screen-name ripple">RIPPLE — ENTRY TRIGGER</div>
+          <div class="elder-tf">1H · BINANCE PERP</div>
+        </div>
+        <div class="elder-rule">
+          <b>Elder's rule:</b> Use a trailing buy/sell stop to enter. In uptrend: place buy stop 1 tick above prior bar's high. In downtrend: place sell stop 1 tick below prior bar's low. Let the market pull you in.
+        </div>
+      </div>
+      <div class="elder-chart">
+        <div class="tradingview-widget-container" style="height:100%;width:100%;">
+          <div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+          {
+            "autosize": true,
+            "symbol": "BINANCE:BTCUSDT.P",
+            "interval": "60",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "backgroundColor": "rgba(6,8,11,1)",
+            "gridColor": "rgba(24,34,46,0.7)",
+            "hide_top_toolbar": false,
+            "save_image": false,
+            "studies": [
+              {"id":"MAExp@tv-basicstudies","inputs":{"length":13}},
+              {"id":"MAExp@tv-basicstudies","inputs":{"length":26}},
+              "STD;MACD",
+              {"id":"Force_Index@tv-basicstudies"},
+              "STD;Volume"
+            ],
+            "support_host": "https://www.tradingview.com"
+          }
+          </script>
+        </div>
+      </div>
+      <div class="elder-assess">
+        <div class="screen-status" id="ripple-dot"></div>
+        <div class="elder-assess-label">TRIGGER:</div>
+        <div class="elder-btns">
+          <button class="ebtn bull" onclick="setScreen('ripple',1)">▲ BUY STOP SET</button>
+          <button class="ebtn neut active" onclick="setScreen('ripple',0)">● WAITING</button>
+          <button class="ebtn bear" onclick="setScreen('ripple',-1)">▼ SELL STOP SET</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════
+         SIGNAL COLUMN
+    ═══════════════════════════ -->
+    <div class="elder-signal-col">
+      <div class="signal-col-hdr">TRIPLE SCREEN OUTPUT</div>
+      <div class="signal-col-body">
+
+        <!-- Screen summaries -->
+        <div class="screen-card neut" id="sc-tide">
+          <div class="sc-top">
+            <div class="sc-name tide" style="color:var(--acc);">SCREEN 1 · TIDE</div>
+            <div class="sc-state neut" id="sc-tide-state">FLAT</div>
+          </div>
+          <div class="sc-rule" id="sc-tide-rule">MACD-H slope on daily is flat. No directional bias — stand aside until tide establishes direction.</div>
+        </div>
+
+        <div class="screen-card neut" id="sc-wave">
+          <div class="sc-top">
+            <div class="sc-name wave" style="color:var(--gld);">SCREEN 2 · WAVE</div>
+            <div class="sc-state neut" id="sc-wave-state">MID-RANGE</div>
+          </div>
+          <div class="sc-rule" id="sc-wave-rule">4H oscillator in mid-range. Wait for pullback to oversold (long) or overbought (short) before acting.</div>
+        </div>
+
+        <div class="screen-card neut" id="sc-ripple">
+          <div class="sc-top">
+            <div class="sc-name ripple" style="color:var(--grn);">SCREEN 3 · RIPPLE</div>
+            <div class="sc-state neut" id="sc-ripple-state">WAITING</div>
+          </div>
+          <div class="sc-rule" id="sc-ripple-rule">No entry stop placed yet. Awaiting Screen 1 + 2 alignment before setting trigger.</div>
+        </div>
+
+        <!-- Elder gate logic -->
+        <div class="tide-gate" id="elder-gate">
+          <b>ELDER GATE:</b> Screens 1 + 2 must agree before Screen 3 can trigger. Currently no alignment — do not trade.
+        </div>
+
+        <!-- Main TA signal -->
+        <div class="ta-signal-output aside" id="ta-signal-box">
+          <span class="sig-word" id="ta-sig-word">STAND ASIDE</span>
+          <span class="sig-sub" id="ta-sig-sub">AWAITING TRIPLE SCREEN ALIGNMENT</span>
+        </div>
+
+        <!-- Entry conditions -->
+        <div class="entry-condition" id="entry-cond">
+          <b>LONG setup requires:</b><br>
+          Screen 1: MACD-H slope rising (daily)<br>
+          Screen 2: 4H pullback to oversold<br>
+          Screen 3: Buy stop above prior 1H high<br><br>
+          <b>SHORT setup requires:</b><br>
+          Screen 1: MACD-H slope falling (daily)<br>
+          Screen 2: 4H rally to overbought<br>
+          Screen 3: Sell stop below prior 1H low
+        </div>
+
+        <!-- Trade Management Panel -->
+        <div class="trade-panel" id="trade-panel">
+          <div class="trade-panel-title">TRADE CALCULATOR</div>
+          <div class="trade-inputs">
+
+            <div class="trade-row">
+              <div class="trade-lbl">ACCOUNT</div>
+              <input class="trade-input" id="t-balance" type="number" placeholder="e.g. 10000" oninput="calcTrade()"/>
+              <div class="trade-unit">USD</div>
+            </div>
+
+            <div class="trade-row">
+              <div class="trade-lbl">RISK/TRADE</div>
+              <input class="trade-input" id="t-risk" type="number" placeholder="e.g. 1" value="1" oninput="calcTrade()"/>
+              <div class="trade-unit">%</div>
+            </div>
+
+            <div class="trade-row">
+              <div class="trade-lbl">ENTRY PRICE</div>
+              <input class="trade-input" id="t-entry" type="number" placeholder="e.g. 98500" oninput="calcTrade()"/>
+              <div class="trade-unit">USD</div>
+            </div>
+
+            <div class="trade-row">
+              <div class="trade-lbl">ATR VALUE</div>
+              <input class="trade-input" id="t-atr" type="number" placeholder="e.g. 1200" oninput="calcTrade()"/>
+              <div class="trade-unit">USD</div>
+            </div>
+
+            <div class="trade-row">
+              <div class="trade-lbl">ATR MULT.</div>
+              <input class="trade-input" id="t-mult" type="number" placeholder="e.g. 2" value="2" oninput="calcTrade()"/>
+              <div class="trade-unit">×</div>
+            </div>
+
+            <div class="trade-row">
+              <div class="trade-lbl">TARGET</div>
+              <input class="trade-input" id="t-target" type="number" placeholder="e.g. 105000" oninput="calcTrade()"/>
+              <div class="trade-unit">USD</div>
+            </div>
+
+          </div>
+
+          <div class="trade-results" id="trade-results">
+
+            <div class="result-row">
+              <div class="result-lbl">STOP LOSS</div>
+              <div class="result-val neutral" id="r-stop">—</div>
+            </div>
+            <div class="result-row">
+              <div class="result-lbl">STOP DISTANCE</div>
+              <div class="result-val neutral" id="r-stopdist">—</div>
+            </div>
+            <div class="result-divider"></div>
+            <div class="result-row">
+              <div class="result-lbl">RISK AMOUNT</div>
+              <div class="result-val neutral" id="r-riskamt">—</div>
+            </div>
+            <div class="result-row">
+              <div class="result-lbl">POSITION SIZE</div>
+              <div class="result-val neutral" id="r-size">—</div>
+            </div>
+            <div class="result-row">
+              <div class="result-lbl">POSITION VALUE</div>
+              <div class="result-val neutral" id="r-posval">—</div>
+            </div>
+            <div class="result-divider"></div>
+            <div class="result-row">
+              <div class="result-lbl">PROFIT TARGET</div>
+              <div class="result-val neutral" id="r-profit">—</div>
+            </div>
+            <div class="rr-display">
+              <div class="rr-lbl">RISK : REWARD</div>
+              <div class="rr-val neutral" id="r-rr">— : 1</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE 3 — DECISION ENGINE
+══════════════════════════════════ -->
+<div class="page" id="page-decision">
+  <div class="decision-view">
+
+    <!-- LEFT: Factor scoring -->
+    <div class="dec-left">
+      <div class="pane-header">
+        <div class="pane-title">MARKET FACTORS</div>
+        <div class="pane-sub">ASSESS EACH AFTER REVIEWING TABS ① + ②</div>
+      </div>
+      <div class="dec-body">
+
+        <div class="factor-group">
+          <div class="factor-group-title">EQUITY — RISK APPETITE</div>
+
+          <div class="factor-row">
+            <div>
+              <div class="factor-name">SP500 / NASDAQ Direction</div>
+              <div class="factor-hint">Are US equities trending up or down?</div>
+            </div>
+            <div class="fbtn-group">
+              <button class="fbtn bull" onclick="setF(0,1)">▲ BULL</button>
+              <button class="fbtn neut active" onclick="setF(0,0)">● NEUT</button>
+              <button class="fbtn bear" onclick="setF(0,-1)">▼ BEAR</button>
+            </div>
+          </div>
+
+          <div class="factor-row">
+            <div>
+              <div class="factor-name">VIX Level</div>
+              <div class="factor-hint">&lt;15 calm · 15–25 elevated · &gt;25 fear</div>
+            </div>
+            <div class="fbtn-group">
+              <button class="fbtn bull" onclick="setF(1,1)">▲ LOW</button>
+              <button class="fbtn neut active" onclick="setF(1,0)">● MID</button>
+              <button class="fbtn bear" onclick="setF(1,-1)">▼ HIGH</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="factor-group">
+          <div class="factor-group-title">MACRO — DOLLAR & GOLD</div>
+
+          <div class="factor-row">
+            <div>
+              <div class="factor-name">DXY — US Dollar</div>
+              <div class="factor-hint">Rising DXY = bearish for BTC</div>
+            </div>
+            <div class="fbtn-group">
+              <button class="fbtn bull" onclick="setF(2,1)">▼ FALLING</button>
+              <button class="fbtn neut active" onclick="setF(2,0)">● FLAT</button>
+              <button class="fbtn bear" onclick="setF(2,-1)">▲ RISING</button>
+            </div>
+          </div>
+
+          <div class="factor-row">
+            <div>
+              <div class="factor-name">Gold Direction</div>
+              <div class="factor-hint">Rising gold = risk-off macro fear</div>
+            </div>
+            <div class="fbtn-group">
+              <button class="fbtn bull" onclick="setF(3,1)">▲ BULL</button>
+              <button class="fbtn neut active" onclick="setF(3,0)">● NEUT</button>
+              <button class="fbtn bear" onclick="setF(3,-1)">▼ BEAR</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="factor-group">
+          <div class="factor-group-title">RISK APPETITE</div>
+
+          <div class="factor-row">
+            <div>
+              <div class="factor-name">Oil / WTI</div>
+              <div class="factor-hint">Rising oil = risk-on global demand</div>
+            </div>
+            <div class="fbtn-group">
+              <button class="fbtn bull" onclick="setF(4,1)">▲ BULL</button>
+              <button class="fbtn neut active" onclick="setF(4,0)">● NEUT</button>
+              <button class="fbtn bear" onclick="setF(4,-1)">▼ BEAR</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="factor-group">
+          <div class="factor-group-title">SENTIMENT</div>
+
+          <div class="factor-row">
+            <div>
+              <div class="factor-name">Fear &amp; Greed Index</div>
+              <div class="factor-hint" id="fg-factor-hint">Loading live index…</div>
+            </div>
+            <div class="fbtn-group">
+              <button class="fbtn bull" id="fg-bull-btn" onclick="setF(5,1)">▲ GREED</button>
+              <button class="fbtn neut active" id="fg-neut-btn" onclick="setF(5,0)">● NEUT</button>
+              <button class="fbtn bear" id="fg-bear-btn" onclick="setF(5,-1)">▼ FEAR</button>
+            </div>
+          </div>
+
+          <div class="factor-row">
+            <div>
+              <div class="factor-name">BTC Daily Trend</div>
+              <div class="factor-hint">Price vs 20/50 MA, higher highs?</div>
+            </div>
+            <div class="fbtn-group">
+              <button class="fbtn bull" onclick="setF(6,1)">▲ BULL</button>
+              <button class="fbtn neut active" onclick="setF(6,0)">● NEUT</button>
+              <button class="fbtn bear" onclick="setF(6,-1)">▼ BEAR</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conviction -->
+        <div style="padding: 4px 0 12px;">
+          <div class="jlabel">CONVICTION LEVEL</div>
+          <div class="conviction-row">
+            <div class="conv-label">SIZE:</div>
+            <button class="conv-btn" onclick="setConv(this,'SMALL')">SMALL</button>
+            <button class="conv-btn active" onclick="setConv(this,'MEDIUM')">MEDIUM</button>
+            <button class="conv-btn" onclick="setConv(this,'FULL')">FULL</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SCORE -->
+      <div class="score-panel">
+        <div class="score-hero">
+          <div class="score-num" id="score-num">50</div>
+          <div class="score-denom">/ 100</div>
+          <div style="margin-left:auto;" id="dec-signal" class="signal-pill aside">◆ STAND ASIDE</div>
+        </div>
+        <div class="score-track">
+          <div class="score-fill" id="score-fill" style="width:0%;margin-left:50%;background:var(--gld);"></div>
+        </div>
+        <div class="score-axis">
+          <span style="color:var(--red)">MAX BEAR</span>
+          <span>NEUTRAL</span>
+          <span style="color:var(--grn)">MAX BULL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Journal + Checklist -->
+    <div class="dec-right">
+      <div class="pane-header">
+        <div class="pane-title">TRADE JOURNAL &amp; CHECKLIST</div>
+        <div class="pane-sub" id="journal-date">—</div>
+      </div>
+      <div class="journal-pane">
+
+        <div>
+          <div class="jlabel">TODAY'S THESIS</div>
+          <textarea class="jtext" placeholder="Write your market read before placing any trade…&#10;&#10;e.g. SP500 pushing higher, VIX below 15, DXY rolling over. BTC holding above 20MA with MACD curling up. Bias long on any dip to support."></textarea>
+        </div>
+
+        <div>
+          <div class="jlabel">PRE-TRADE CHECKLIST</div>
+          <div class="checklist" id="checklist"></div>
+        </div>
+
+        <div>
+          <div class="jlabel">POST-TRADE NOTES</div>
+          <textarea class="jtext" style="height:70px;" placeholder="Entry price, stop, target. What did you learn?"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── TABS ──
+function switchTab(t) {
+  try {
+    const tabs = document.querySelectorAll('.tab');
+    const pages = ['markets','technicals','decision'];
+    tabs.forEach((el,i) => el.classList.toggle('active', pages[i]===t));
+    pages.forEach(p => {
+      const el = document.getElementById('page-'+p);
+      if (el) el.classList.toggle('active', p===t);
+    });
+  } catch(e) { console.warn('switchTab error:', e); }
+}
+
+// ── CLOCK ──
+function tick() {
+  try {
+    const n = new Date();
+    const dateEl = document.getElementById('hdr-date');
+    const timeEl = document.getElementById('hdr-time');
+    const jdate  = document.getElementById('journal-date');
+    if (dateEl) dateEl.textContent = n.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    if (timeEl) timeEl.textContent = n.toUTCString().slice(17,25);
+    if (jdate)  jdate.textContent  = n.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  } catch(e) {}
+}
+tick(); setInterval(tick, 1000);
+
+// ── SESSIONS ──
+function renderSessions() {
+  const h = new Date().getUTCHours();
+  const s = [
+    {n:'US MKT',  open: h>=13&&h<21},
+    {n:'EU MKT',  open: h>=7&&h<16},
+    {n:'ASIA MKT',open: h>=23||h<8},
+  ];
+  document.getElementById('sessions').innerHTML = s.map(x=>`
+    <div class="sess-row">
+      <div class="sess-dot ${x.open?'open':'closed'}"></div>
+      <span style="color:${x.open?'var(--grn)':'var(--dim)'};">${x.n}</span>
+      <span style="color:var(--dim);margin-left:3px;">${x.open?'OPEN':'CLOSED'}</span>
+    </div>`).join('');
+}
+renderSessions(); setInterval(renderSessions, 60000);
+
+// ── FEAR & GREED ──
+async function loadFG() {
+  try {
+    const r = await fetch('https://api.alternative.me/fng/');
+    const d = await r.json();
+    const score = parseInt(d.data[0].value);
+    const name  = d.data[0].value_classification.toUpperCase();
+
+    let color = 'var(--gld)';
+    if (score < 25) color = 'var(--red)';
+    else if (score < 45) color = '#ff7055';
+    else if (score > 75) color = 'var(--grn)';
+    else if (score > 55) color = '#7bf09d';
+
+    const angle = -90 + (score/100)*180;
+    const needle = document.getElementById('fn-mini');
+    if (needle) needle.setAttribute('transform',`rotate(${angle},50,50)`);
+
+    const fgNum = document.getElementById('fg-num');
+    const fgLbl = document.getElementById('fg-lbl');
+    const fgBar = document.getElementById('fg-bar');
+    const fgHint = document.getElementById('fg-factor-hint');
+
+    if (fgNum) { fgNum.textContent = score; fgNum.style.color = color; }
+    if (fgLbl) { fgLbl.textContent = name;  fgLbl.style.color = color; }
+    if (fgBar) { fgBar.style.width = score+'%'; fgBar.style.background = color; }
+    if (fgHint) fgHint.textContent = `Live: ${score} — ${name}`;
+
+    const state = score > 60 ? 1 : score < 40 ? -1 : 0;
+    setF(5, state);
+    return score;
+  } catch(e) {
+    const fgLbl = document.getElementById('fg-lbl');
+    if (fgLbl) fgLbl.textContent = 'UNAVAILABLE';
+  }
+}
+loadFG();
+
+// ── DECISION ENGINE ──
+const F = [0,0,0,0,0,0,0]; // 7 factors
+
+function setF(i, v) {
+  F[i] = v;
+  // Update button states for row i
+  const rows = document.querySelectorAll('.factor-row');
+  const btns = rows[i]?.querySelectorAll('.fbtn');
+  if (btns) {
+    btns[0].classList.toggle('active', v===1);
+    btns[1].classList.toggle('active', v===0);
+    btns[2].classList.toggle('active', v===-1);
+  }
+  computeScore();
+}
+
+function computeScore() {
+  try {
+    const sum = F.reduce((a,b)=>a+b,0);
+    const max = F.length;
+    const pct = Math.round(((sum+max)/(max*2))*100);
+
+    let color, signal, cls;
+    if (pct>62)      {color='var(--grn)';signal='GO LONG';    cls='long';}
+    else if(pct<38)  {color='var(--red)';signal='GO SHORT';   cls='short';}
+    else             {color='var(--gld)';signal='STAND ASIDE';cls='aside';}
+
+    const barW = Math.abs(pct-50)*2;
+    const fill = document.getElementById('score-fill');
+    if (fill) {
+      fill.style.width = barW+'%';
+      fill.style.marginLeft = pct>=50 ? '50%' : (50-barW)+'%';
+      fill.style.background = color;
+    }
+
+    const scoreNum = document.getElementById('score-num');
+    if (scoreNum) { scoreNum.textContent = pct; scoreNum.style.color = color; }
+
+    ['dec-signal','main-signal'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (el) { el.textContent = '◆ '+signal; el.className = 'signal-pill '+cls; }
+    });
+  } catch(e) { console.warn('computeScore error:', e); }
+}
+computeScore();
+
+// ── CONVICTION ──
+function setConv(btn, val) {
+  document.querySelectorAll('.conv-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── ELDER TRIPLE SCREEN ──
+const SCREENS = { tide: 0, wave: 0, ripple: 0 };
+
+const SCREEN_RULES = {
+  tide: {
+    1:  { label: 'RISING',   cls: 'bull', rule: 'Daily MACD-H slope is rising. Tide is bullish — only look for LONG setups on Screen 2.' },
+    0:  { label: 'FLAT',     cls: 'neut', rule: 'Daily MACD-H slope is flat. No clear tide direction — stand aside until bias establishes.' },
+    '-1': { label: 'FALLING', cls: 'bear', rule: 'Daily MACD-H slope is falling. Tide is bearish — only look for SHORT setups on Screen 2.' }
+  },
+  wave: {
+    1:  { label: 'OVERSOLD',    cls: 'bull', rule: '4H oscillator pulled back to oversold. In an uptrend this is a buying opportunity — watch for Screen 3 trigger.' },
+    0:  { label: 'MID-RANGE',   cls: 'neut', rule: '4H oscillator in mid-range. Wait for a pullback to extreme before acting — no edge here yet.' },
+    '-1': { label: 'OVERBOUGHT', cls: 'bear', rule: '4H oscillator rallied to overbought. In a downtrend this is a shorting opportunity — watch for Screen 3 trigger.' }
+  },
+  ripple: {
+    1:  { label: 'BUY STOP SET',  cls: 'bull', rule: 'Buy stop placed 1 tick above prior 1H high. Market must break up to pull you in — do not chase.' },
+    0:  { label: 'WAITING',       cls: 'neut', rule: 'No trigger set yet. Awaiting Screen 1 + 2 alignment before placing entry stop.' },
+    '-1': { label: 'SELL STOP SET', cls: 'bear', rule: 'Sell stop placed 1 tick below prior 1H low. Market must break down to pull you in — do not chase.' }
+  }
+};
+
+function setScreen(screen, val) {
+  SCREENS[screen] = val;
+
+  // Update button states
+  const assessDivs = document.querySelectorAll('.elder-assess');
+  const idx = {tide:0, wave:1, ripple:2}[screen];
+  const btns = assessDivs[idx].querySelectorAll('.ebtn');
+  btns[0].classList.toggle('active', val === 1);
+  btns[1].classList.toggle('active', val === 0);
+  btns[2].classList.toggle('active', val === -1);
+
+  // Update status dot
+  const dot = document.getElementById(screen + '-dot');
+  dot.className = 'screen-status ' + (val === 1 ? 'bull' : val === -1 ? 'bear' : 'neut');
+
+  // Update screen card
+  const key = String(val);
+  const r = SCREEN_RULES[screen][key];
+  const card = document.getElementById('sc-' + screen);
+  card.className = 'screen-card ' + r.cls;
+  document.getElementById('sc-' + screen + '-state').className = 'sc-state ' + r.cls;
+  document.getElementById('sc-' + screen + '-state').textContent = r.label;
+  document.getElementById('sc-' + screen + '-rule').textContent = r.rule;
+
+  computeElderSignal();
+}
+
+function computeElderSignal() {
+  const t = SCREENS.tide;
+  const w = SCREENS.wave;
+  const r = SCREENS.ripple;
+
+  const gate  = document.getElementById('elder-gate');
+  const box   = document.getElementById('ta-signal-box');
+  const word  = document.getElementById('ta-sig-word');
+  const sub   = document.getElementById('ta-sig-sub');
+
+  // Elder's strict logic:
+  // LONG:  tide rising (1) + wave oversold (1) + ripple buy stop (1)
+  // SHORT: tide falling (-1) + wave overbought (-1) + ripple sell stop (-1)
+  // Partial alignment — warn but don't signal
+  // No alignment — stand aside
+
+  const longReady  = t === 1  && w === 1  && r === 1;
+  const shortReady = t === -1 && w === -1 && r === -1;
+  const longSetup  = t === 1  && w === 1  && r === 0;   // waiting for trigger
+  const shortSetup = t === -1 && w === -1 && r === 0;   // waiting for trigger
+  const tideOnly   = t !== 0  && w === 0;
+
+  if (longReady) {
+    gate.className = 'tide-gate pass';
+    gate.innerHTML = '<b>✓ ELDER GATE PASSED:</b> All 3 screens aligned bullish. Buy stop triggered — you are in a long position.';
+    box.className = 'ta-signal-output long';
+    word.textContent = 'GO LONG';
+    word.style.color = 'var(--grn)';
+    sub.textContent = 'TRIPLE SCREEN CONFIRMED · BUY STOP TRIGGERED';
+  } else if (shortReady) {
+    gate.className = 'tide-gate pass';
+    gate.innerHTML = '<b>✓ ELDER GATE PASSED:</b> All 3 screens aligned bearish. Sell stop triggered — you are in a short position.';
+    box.className = 'ta-signal-output short';
+    word.textContent = 'GO SHORT';
+    word.style.color = 'var(--red)';
+    sub.textContent = 'TRIPLE SCREEN CONFIRMED · SELL STOP TRIGGERED';
+  } else if (longSetup) {
+    gate.className = 'tide-gate pass';
+    gate.innerHTML = '<b>⏳ SETUP FORMING:</b> Tide + Wave aligned bullish. Place buy stop 1 tick above prior 1H high — wait for market to trigger it.';
+    box.className = 'ta-signal-output aside';
+    word.textContent = 'PREPARE LONG';
+    word.style.color = 'var(--gld)';
+    sub.textContent = 'SET BUY STOP · AWAITING SCREEN 3 TRIGGER';
+  } else if (shortSetup) {
+    gate.className = 'tide-gate pass';
+    gate.innerHTML = '<b>⏳ SETUP FORMING:</b> Tide + Wave aligned bearish. Place sell stop 1 tick below prior 1H low — wait for market to trigger it.';
+    box.className = 'ta-signal-output aside';
+    word.textContent = 'PREPARE SHORT';
+    word.style.color = 'var(--gld)';
+    sub.textContent = 'SET SELL STOP · AWAITING SCREEN 3 TRIGGER';
+  } else if (tideOnly) {
+    gate.className = 'tide-gate';
+    gate.innerHTML = '<b>ELDER GATE:</b> Tide established but wave not yet at extreme. Watch 4H — wait for oscillator pullback before acting.';
+    box.className = 'ta-signal-output aside';
+    word.textContent = 'STAND ASIDE';
+    word.style.color = 'var(--gld)';
+    sub.textContent = 'TIDE SET · WAITING FOR WAVE PULLBACK';
+  } else {
+    gate.className = 'tide-gate';
+    gate.innerHTML = '<b>ELDER GATE:</b> Screens 1 + 2 must agree before Screen 3 can trigger. No alignment — do not trade.';
+    box.className = 'ta-signal-output aside';
+    word.textContent = 'STAND ASIDE';
+    word.style.color = 'var(--gld)';
+    sub.textContent = 'AWAITING TRIPLE SCREEN ALIGNMENT';
+  }
+}
+
+// Init Elder screens
+computeElderSignal();
+
+// ── TRADE CALCULATOR ──
+function calcTrade() {
+  const balance = parseFloat(document.getElementById('t-balance').value);
+  const riskPct = parseFloat(document.getElementById('t-risk').value);
+  const entry   = parseFloat(document.getElementById('t-entry').value);
+  const atr     = parseFloat(document.getElementById('t-atr').value);
+  const mult    = parseFloat(document.getElementById('t-mult').value) || 2;
+  const target  = parseFloat(document.getElementById('t-target').value);
+
+  const direction = SCREENS.tide === 1 ? 'long' : SCREENS.tide === -1 ? 'short' : 'neutral';
+  const cls = direction === 'long' ? 'long' : direction === 'short' ? 'short' : 'neutral';
+
+  const fmt    = v => '$' + v.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+  const fmt2   = v => '$' + v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmtBtc = v => v.toFixed(4) + ' BTC';
+
+  function set(id, val, c) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val;
+    el.className = 'result-val ' + (c || 'neutral');
+  }
+
+  if (!entry || !atr) { resetResults(); return; }
+
+  const stopDist  = atr * mult;
+  const stopPrice = direction === 'short' ? entry + stopDist : entry - stopDist;
+
+  set('r-stop',     fmt(stopPrice), cls);
+  set('r-stopdist', fmt(stopDist) + '  (' + ((stopDist/entry)*100).toFixed(2) + '%)', cls);
+
+  if (balance && riskPct) {
+    const riskAmt  = balance * (riskPct / 100);
+    const posSize  = riskAmt / stopDist;
+    const posValue = posSize * entry;
+
+    set('r-riskamt', fmt2(riskAmt), cls);
+    set('r-size',    fmtBtc(posSize), cls);
+    set('r-posval',  fmt(posValue), cls);
+
+    if (target) {
+      const profitDist = Math.abs(target - entry);
+      const profitAmt  = posSize * profitDist;
+      const rr         = profitDist / stopDist;
+      const rrCls      = rr >= 3 ? 'good' : rr >= 2 ? 'ok' : 'bad';
+      set('r-profit', fmt2(profitAmt) + '  (target ' + fmt(target) + ')', cls);
+      const rrEl = document.getElementById('r-rr');
+      if (rrEl) { rrEl.textContent = rr.toFixed(1) + ' : 1'; rrEl.className = 'rr-val ' + rrCls; }
+    } else {
+      set('r-profit', 'Enter target price above', 'neutral');
+    }
+  } else {
+    set('r-riskamt', 'Enter balance + risk %', 'neutral');
+    set('r-size',    '—', 'neutral');
+    set('r-posval',  '—', 'neutral');
+  }
+}
+
+function resetResults() {
+  ['r-stop','r-stopdist','r-riskamt','r-size','r-posval','r-profit'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = '—'; el.className = 'result-val neutral'; }
+  });
+  const rr = document.getElementById('r-rr');
+  if (rr) { rr.textContent = '— : 1'; rr.className = 'rr-val neutral'; }
+}
+
+
+const CHECKS = [
+  'Reviewed macro markets (Tab ①)',
+  'Checked daily BTC futures bias (Tab ②)',
+  'Confirmed 4H setup aligns with daily (Tab ②)',
+  'SP500 / NASDAQ direction assessed',
+  'VIX level checked',
+  'DXY direction checked',
+  'Gold signal read',
+  'Oil / risk appetite assessed',
+  'Fear & Greed noted',
+  'Key S/R levels marked on charts',
+  'Position size set to conviction level',
+  'No major macro events scheduled today',
+];
+document.getElementById('checklist').innerHTML = CHECKS.map(c=>`
+  <div class="chk" onclick="this.classList.toggle('done')">
+    <div class="chk-box">✓</div>
+    <div class="chk-txt">${c}</div>
+  </div>`).join('');
+</script>
+</body>
+</html>
